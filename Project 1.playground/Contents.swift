@@ -28,6 +28,10 @@ class TableViewController : UITableViewController {
 
         // Register for reuse identifier for later use.
         tableView.register(UITableViewCell.self, forCellReuseIdentifier: myCustomCellId)
+
+        title = "Storm Viewer"
+
+        navigationController?.navigationBar.prefersLargeTitles = true
     }
 
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
@@ -40,6 +44,12 @@ class TableViewController : UITableViewController {
         cell.textLabel?.text = getLastURLComponent(of: imagePath)
         cell.imageView?.image = UIImage(contentsOfFile: imagePath)
         return cell
+    }
+
+    override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        let detailViewController = DetailViewController()
+        detailViewController.image = pictures[indexPath.row]
+        navigationController?.pushViewController(detailViewController, animated: true)
     }
 }
 
@@ -74,12 +84,33 @@ class DetailViewController: UIViewController {
 
         self.view = view
     }
+
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        title = image.name
+        navigationItem.largeTitleDisplayMode = .never
+    }
+
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        navigationController?.hidesBarsOnTap = true
+    }
+
+    override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+        navigationController?.hidesBarsOnTap = false
+    }
 }
 
 // MARK: - Previews
 
-func previewTableViewController() -> UITableViewController {
-    return TableViewController()
+func previewTableViewController() -> UINavigationController {
+    let navigationController = UINavigationController()
+    let tableViewController = TableViewController()
+
+    navigationController.viewControllers = [tableViewController]
+
+    return navigationController
 }
 
 func previewDetailViewController() -> UIViewController {
@@ -95,5 +126,5 @@ func previewDetailViewController() -> UIViewController {
     return controller
 }
 
-PlaygroundPage.current.liveView = previewDetailViewController()
+PlaygroundPage.current.liveView = previewTableViewController()
 
