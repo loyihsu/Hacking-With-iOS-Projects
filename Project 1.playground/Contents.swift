@@ -8,8 +8,13 @@ func getLastURLComponent(of path: String) -> String? {
     return url.lastPathComponent
 }
 
+struct ImageItem {
+    var name: String
+    var path: String
+}
+
 class TableViewController : UITableViewController {
-    var pictures = [String]()
+    var pictures = [ImageItem]()
 
     let myCustomCellId = "myCustomCellId"
 
@@ -22,9 +27,17 @@ class TableViewController : UITableViewController {
         // let items = try! fm.contentsOfDirectory(atPath: path)
 
         // Get the image files in the `Resource` folder in Swift Playground
-        pictures = Bundle
+        let images = Bundle
             .main
             .paths(forResourcesOfType: "jpg", inDirectory: nil)
+
+
+        pictures = images
+            .sorted()
+            .enumerated()
+            .map({ (offset, path) -> ImageItem in
+                return ImageItem(name: "Picture \(offset + 1) of \(images.count)", path: path)
+            })
 
         // Register for reuse identifier for later use.
         tableView.register(UITableViewCell.self, forCellReuseIdentifier: myCustomCellId)
@@ -40,9 +53,13 @@ class TableViewController : UITableViewController {
 
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: myCustomCellId, for: indexPath)
-        let imagePath = pictures[indexPath.row]
-        cell.textLabel?.text = getLastURLComponent(of: imagePath)
-        cell.imageView?.image = UIImage(contentsOfFile: imagePath)
+
+        cell.textLabel?.font = .systemFont(ofSize: 16, weight: .bold)
+
+        let imageItem = pictures[indexPath.row]
+        cell.textLabel?.text = imageItem.name
+        cell.imageView?.image = UIImage(contentsOfFile: imageItem.path)
+        
         return cell
     }
 
@@ -54,18 +71,18 @@ class TableViewController : UITableViewController {
 }
 
 class DetailViewController: UIViewController {
-    var image: String!
+    var image: ImageItem!
 
     override func loadView() {
         let view = UIView()
-        view.backgroundColor = .white
+        view.backgroundColor = .systemBackground
 
         let imageView = UIImageView()
         view.addSubview(imageView)
 
         imageView.contentMode = .scaleAspectFit
 
-        imageView.image = UIImage(contentsOfFile: image)
+        imageView.image = UIImage(contentsOfFile: image.path)
 
         imageView.translatesAutoresizingMaskIntoConstraints = false
 
@@ -121,7 +138,9 @@ func previewDetailViewController() -> UIViewController {
         .paths(forResourcesOfType: "jpg", inDirectory: nil)
         .first!
 
-    controller.image = image
+    let item = ImageItem(name: "Picture 1 of 1", path: image)
+
+    controller.image = item
 
     return controller
 }
