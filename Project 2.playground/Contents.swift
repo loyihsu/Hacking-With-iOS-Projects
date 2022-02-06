@@ -23,6 +23,8 @@ class GameViewController : UIViewController {
 
     let sizeConstant: CGFloat = 120
 
+    var questions: [String] = []
+
     let listOfCountries = [
         "United States", "France", "Germany", "Ireland", "Estonia", "Italy",
         "Monaco", "Nigeria", "Poland", "Russia", "Spain", "United Kingdom"
@@ -31,6 +33,11 @@ class GameViewController : UIViewController {
     let countryToFlag: [String: CountryFlags] = [
         "United States": .us, "France": .fr, "Germany": .ge, "Ireland": .ir, "Estonia": .es, "Italy": .it,
         "Monaco": .mo, "Nigeria": .ni, "Poland": .po, "Russia": .ru, "Spain": .sp, "United Kingdom": .uk
+    ]
+
+    let flagToCountry: [CountryFlags: String] = [
+        .us: "United States", .fr: "France", .ge: "Germany", .ir: "Ireland", .es: "Estonia", .it: "Italy",
+        .mo: "Monaco", .ni: "Nigeria", .po: "Poland", .ru: "Russia", .sp: "Spain", .uk: "United Kingdom"
     ]
 
     private func setupButton(_ button: UIButton, to view: UIView,
@@ -71,24 +78,23 @@ class GameViewController : UIViewController {
         self.view = view
 
         self.navigationController?.navigationBar.prefersLargeTitles = true
-
+        questions = listOfCountries
         askQuestion()
     }
 
     func askQuestion() {
-        let prevQuestion = (navigationController?.title ?? "").components(separatedBy: .whitespaces).first ?? ""
-        var question = listOfCountries.randomElement()
+        questions.shuffle()
 
-        while question == prevQuestion {
-            question = listOfCountries.randomElement()
+        guard let question = questions.popLast() else {
+            createAlert(title: "Your Final Score is \(yourScore)", message: "You've answered all the questions!")
+            return
         }
 
-        title = question! + " (Score: \(yourScore))"
+        title = question + " (Score: \(yourScore))"
 
-        var answerFlags = [countryToFlag[question!]!]
+        var answerFlags = [countryToFlag[question]!]
 
         var flag = countryToFlag[listOfCountries.randomElement()!]!
-
         while answerFlags.count < 3 {
             if !answerFlags.contains(flag) {
                 answerFlags.append(flag)
@@ -115,21 +121,38 @@ class GameViewController : UIViewController {
         let answer = navString.components(separatedBy: " (").first!
         let translated = countryToFlag[answer]!
 
-        if CountryFlags(rawValue: attempt)! == translated {
+        let nextQuestionAction = UIAlertAction(title: "Continue", style: .default, handler: { _ in
+            self.askQuestion()
+        })
+        let thisAttempt = CountryFlags(rawValue: attempt)!
+        if thisAttempt == translated {
             yourScore += 1
-            createAlert(title: "Correcto!", message: "Your score is now \(yourScore).")
+            createAlert(title: "Correcto!", message: "Your score is now \(yourScore).", action: nextQuestionAction)
         } else {
-            createAlert(title: "Uh-oh! Wrong answer!", message: "Your score is still \(yourScore)")
+            yourScore -= 1
+            let realCountry = flagToCountry[thisAttempt]!
+            createAlert(title: "Uh-oh! Wrong answer!", message: "That's the flag of \(realCountry).\nYour score is now \(yourScore)", action: nextQuestionAction)
         }
 
     }
 
-    func createAlert(title: String?, message: String?) {
+    func createAlert(title: String?, message: String?, action: UIAlertAction? = nil) {
         let alertController = UIAlertController(title: title, message: message, preferredStyle: .alert)
-        alertController.addAction(UIAlertAction(title: "Continue", style: .default, handler: { _ in
-            self.askQuestion()
-        }))
+        if let action = action {
+            alertController.addAction(action)
+        } else {
+            alertController.addAction(UIAlertAction(title: "Restart", style: .cancel, handler: { [self] _ in
+                reset()
+                alertController.dismiss(animated: true, completion: nil)
+            }))
+        }
         present(alertController, animated: true)
+    }
+
+    func reset() {
+        yourScore = 0
+        questions = listOfCountries
+        askQuestion()
     }
 }
 
