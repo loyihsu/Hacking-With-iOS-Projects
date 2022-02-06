@@ -47,6 +47,10 @@ class TableViewController : UITableViewController {
         title = "Storm Viewer"
 
         navigationController?.navigationBar.prefersLargeTitles = true
+        navigationItem.rightBarButtonItem = UIBarButtonItem(
+            barButtonSystemItem: .action,
+            target: self,
+            action: #selector(recommend))
     }
 
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
@@ -69,6 +73,20 @@ class TableViewController : UITableViewController {
         let detailViewController = DetailViewController()
         detailViewController.image = pictures[indexPath.row]
         navigationController?.pushViewController(detailViewController, animated: true)
+    }
+
+    @objc func recommend(_ sender: UIBarButtonItem!) {
+        let ac = UIAlertController(title: "Share this app to your friend", message: "Please share this app to your friend", preferredStyle: .actionSheet)
+        ac.addAction(UIAlertAction(title: "YES!", style: .default, handler: { _ in
+            print("YES!")
+        }))
+        ac.addAction(UIAlertAction(title: "Yes", style: .default, handler: { _ in
+            print("Yes")
+        }))
+        ac.addAction(UIAlertAction(title: "NOnononoNONo", style: .destructive, handler: {  _ in
+            print("Really?")
+        }))
+        present(ac, animated: true)
     }
 }
 

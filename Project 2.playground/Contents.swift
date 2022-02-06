@@ -1,5 +1,5 @@
 //: A UIKit based Playground for presenting user interface
-  
+
 import UIKit
 import PlaygroundSupport
 
@@ -80,17 +80,27 @@ class GameViewController : UIViewController {
         self.navigationController?.navigationBar.prefersLargeTitles = true
         questions = listOfCountries
         askQuestion()
+
+        self.navigationItem.rightBarButtonItem = UIBarButtonItem(
+            barButtonSystemItem: .action,
+            target: self,
+            action: #selector(showScore))
     }
 
     func askQuestion() {
         questions.shuffle()
 
         guard let question = questions.popLast() else {
-            createAlert(title: "Your Final Score is \(yourScore)", message: "You've answered all the questions!")
+            createAlert(title: "Your Final Score is \(yourScore)", message: "You've answered all the questions!") { alertController in
+                alertController.addAction(UIAlertAction(title: "Restart", style: .destructive) { [self] _ in
+                    reset()
+                    alertController.dismiss(animated: true, completion: nil)
+                })
+            }
             return
         }
 
-        title = question + " (Score: \(yourScore))"
+        title = question
 
         var answerFlags = [countryToFlag[question]!]
 
@@ -110,7 +120,7 @@ class GameViewController : UIViewController {
     }
 
     @objc func buttonTapped(sender: UIButton!) {
-        guard let navString = title else {
+        guard let answer = title else {
             fatalError("Why are you here?")
         }
 
@@ -118,34 +128,38 @@ class GameViewController : UIViewController {
             fatalError("You shouldn't be here either!")
         }
 
-        let answer = navString.components(separatedBy: " (").first!
         let translated = countryToFlag[answer]!
 
-        let nextQuestionAction = UIAlertAction(title: "Continue", style: .default, handler: { _ in
+        let nextQuestionAction = UIAlertAction(title: "Continue", style: .default) { _ in
             self.askQuestion()
-        })
+        }
         let thisAttempt = CountryFlags(rawValue: attempt)!
         if thisAttempt == translated {
             yourScore += 1
-            createAlert(title: "Correcto!", message: "Your score is now \(yourScore).", action: nextQuestionAction)
+            createAlert(title: "Correcto!", message: "Your score is now \(yourScore).")  { alertController in
+                alertController.addAction(nextQuestionAction)
+            }
         } else {
             yourScore -= 1
             let realCountry = flagToCountry[thisAttempt]!
-            createAlert(title: "Uh-oh! Wrong answer!", message: "That's the flag of \(realCountry).\nYour score is now \(yourScore)", action: nextQuestionAction)
+            createAlert(title: "Uh-oh! Wrong answer!", message: "That's the flag of \(realCountry).\nYour score is now \(yourScore)") { alertController in
+                alertController.addAction(nextQuestionAction)
+            }
         }
 
     }
 
-    func createAlert(title: String?, message: String?, action: UIAlertAction? = nil) {
-        let alertController = UIAlertController(title: title, message: message, preferredStyle: .alert)
-        if let action = action {
-            alertController.addAction(action)
-        } else {
-            alertController.addAction(UIAlertAction(title: "Restart", style: .cancel, handler: { [self] _ in
-                reset()
+    @objc func showScore(sender: UIBarButtonItem!) {
+        createAlert(title: "Your score is \(yourScore)", message: nil) { alertController in
+            alertController.addAction(UIAlertAction(title: "Close", style: .default) { _ in
                 alertController.dismiss(animated: true, completion: nil)
-            }))
+            })
         }
+    }
+
+    func createAlert(title: String?, message: String?, action: @escaping (UIAlertController) -> ()) {
+        let alertController = UIAlertController(title: title, message: message, preferredStyle: .alert)
+        action(alertController)
         present(alertController, animated: true)
     }
 
