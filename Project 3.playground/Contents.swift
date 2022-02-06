@@ -21,16 +21,16 @@ class TableViewController : UITableViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
 
-        // This is intended for read app.
+        // This is intended for real app.
         // let fm = FileManager.default
         // let path = Bundle.main.resourcePath!
-        // let items = try! fm.contentsOfDirectory(atPath: path)
+        // let images = try! fm.contentsOfDirectory(atPath: path)
+        //    .filter({ $0.contains("nssl") })
+        //    .map({ "\(path)/\($0)" })
 
-        // Get the image files in the `Resource` folder in Swift Playground
         let images = Bundle
             .main
             .paths(forResourcesOfType: "jpg", inDirectory: nil)
-
 
         pictures = images
             .sorted()
@@ -43,8 +43,6 @@ class TableViewController : UITableViewController {
         tableView.register(UITableViewCell.self, forCellReuseIdentifier: myCustomCellId)
 
         title = "Storm Viewer"
-
-        navigationController?.navigationBar.prefersLargeTitles = true
     }
 
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
@@ -72,12 +70,12 @@ class TableViewController : UITableViewController {
 
 class DetailViewController: UIViewController {
     var image: ImageItem!
+    let imageView = UIImageView()
 
     override func loadView() {
         let view = UIView()
         view.backgroundColor = .systemBackground
 
-        let imageView = UIImageView()
         view.addSubview(imageView)
 
         imageView.contentMode = .scaleAspectFit
@@ -106,6 +104,13 @@ class DetailViewController: UIViewController {
         super.viewDidLoad()
         title = image.name
         navigationItem.largeTitleDisplayMode = .never
+
+        navigationController?.navigationBar.prefersLargeTitles = true
+
+        navigationItem.rightBarButtonItem = UIBarButtonItem(
+            barButtonSystemItem: .action,
+            target: self,
+            action: #selector(shareTapped))
     }
 
     override func viewWillAppear(_ animated: Bool) {
@@ -116,6 +121,19 @@ class DetailViewController: UIViewController {
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
         navigationController?.hidesBarsOnTap = false
+    }
+
+
+    @objc func shareTapped(_ caller: UIBarButtonItem!) {
+        guard let image = imageView.image?.jpegData(compressionQuality: 0.8) else {
+            print("No image found")
+            return
+        }
+
+        let controller = UIActivityViewController(activityItems: [image],
+        applicationActivities: [])
+        controller.popoverPresentationController?.barButtonItem = navigationItem.rightBarButtonItem
+        present(controller, animated: true)
     }
 }
 

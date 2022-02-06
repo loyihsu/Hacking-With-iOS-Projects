@@ -21,10 +21,12 @@ class TableViewController : UITableViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
 
-        // This is intended for read app.
+        // This is intended for real app.
         // let fm = FileManager.default
         // let path = Bundle.main.resourcePath!
-        // let items = try! fm.contentsOfDirectory(atPath: path)
+        // let images = try! fm.contentsOfDirectory(atPath: path)
+        //    .filter({ $0.contains("nssl") })
+        //    .map({ "\(path)/\($0)" })
 
         // Get the image files in the `Resource` folder in Swift Playground
         let images = Bundle
