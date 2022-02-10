@@ -4,11 +4,40 @@ import UIKit
 import WebKit
 import PlaygroundSupport
 
+fileprivate var websites = ["apple.com", "hackingwithswift.com"]
+
+class TableViewController: UITableViewController {
+    let myCustomCellId = "myCustomCellId"
+
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        tableView.register(UITableViewCell.self, forCellReuseIdentifier: myCustomCellId)
+    }
+
+    override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+        return websites.count
+    }
+
+    override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+        let cell = tableView.dequeueReusableCell(withIdentifier: myCustomCellId, for: indexPath)
+
+        cell.textLabel?.text = websites[indexPath.row]
+
+        return cell
+    }
+
+    override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        let viewController = ViewController()
+        viewController.website = "https://" + websites[indexPath.row]
+        navigationController?.pushViewController(viewController, animated: true)
+    }
+}
+
 class ViewController : UIViewController, WKNavigationDelegate {
     var webView: WKWebView!
     var progressView: UIProgressView!
 
-    var websites = ["apple.com", "hackingwithswift.com"]
+    var website = "https://www.hackingwithswift.com"
 
     override func loadView() {
         webView = WKWebView()
@@ -18,7 +47,7 @@ class ViewController : UIViewController, WKNavigationDelegate {
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        let url = URL(string: "https://www.hackingwithswift.com")!
+        let url = URL(string: website)!
         webView.load(URLRequest(url: url))
         webView.allowsBackForwardNavigationGestures = true
 
@@ -43,7 +72,10 @@ class ViewController : UIViewController, WKNavigationDelegate {
                                       target: webView,
                                       action: #selector(webView.reload))
 
-        toolbarItems = [progressButton, spacer, refresh]
+        let goBack = UIBarButtonItem(barButtonSystemItem: .undo ,target: webView, action: #selector(webView.goBack))
+        let goForward = UIBarButtonItem(barButtonSystemItem: .redo, target: webView, action: #selector(webView.goForward))
+
+        toolbarItems = [progressButton, spacer, goBack, goForward, refresh]
         navigationController?.isToolbarHidden = false
     }
 
@@ -53,12 +85,15 @@ class ViewController : UIViewController, WKNavigationDelegate {
 
     func webView(_ webView: WKWebView, decidePolicyFor navigationAction: WKNavigationAction, decisionHandler: @escaping (WKNavigationActionPolicy) -> Void) {
         let url = navigationAction.request.url
+
         if let host = url?.host {
             for website in websites where host.contains(website) {
                 decisionHandler(.allow)
+                print(website)
                 return
             }
         }
+
         decisionHandler(.cancel)
     }
 
@@ -81,6 +116,10 @@ class ViewController : UIViewController, WKNavigationDelegate {
         }
 
         alertController.addAction(
+            UIAlertAction(title: "www.google.com", style: .default, handler: openPage)
+        )
+
+        alertController.addAction(
             UIAlertAction(title: "Cancel", style: .cancel)
         )
 
@@ -91,10 +130,22 @@ class ViewController : UIViewController, WKNavigationDelegate {
     func openPage(action: UIAlertAction) {
         let url = URL(string: "https://" + action.title!)!
         webView.load(URLRequest(url: url))
+        if !websites.contains(action.title!) {
+            let alert = UIAlertController(title: "This URL is blocked!",
+                                          message: nil,
+                                          preferredStyle: .alert)
+
+            alert.addAction(
+                UIAlertAction(title: "Close",
+                              style: .cancel)
+            )
+
+            present(alert, animated: true, completion: nil)
+        }
     }
 }
 
 
 PlaygroundPage.current.liveView = UINavigationController(
-    rootViewController: ViewController()
+    rootViewController: TableViewController()
 )
