@@ -8,6 +8,8 @@ class ViewController : UIViewController, WKNavigationDelegate {
     var webView: WKWebView!
     var progressView: UIProgressView!
 
+    var websites = ["apple.com", "hackingwithswift.com"]
+
     override func loadView() {
         webView = WKWebView()
         webView.navigationDelegate = self
@@ -49,6 +51,17 @@ class ViewController : UIViewController, WKNavigationDelegate {
         title = webView.title
     }
 
+    func webView(_ webView: WKWebView, decidePolicyFor navigationAction: WKNavigationAction, decisionHandler: @escaping (WKNavigationActionPolicy) -> Void) {
+        let url = navigationAction.request.url
+        if let host = url?.host {
+            for website in websites where host.contains(website) {
+                decisionHandler(.allow)
+                return
+            }
+        }
+        decisionHandler(.cancel)
+    }
+
     override func observeValue(forKeyPath keyPath: String?, of object: Any?, change: [NSKeyValueChangeKey : Any]?, context: UnsafeMutableRawPointer?) {
         if keyPath == "estimatedProgress" {
             progressView.progress = Float(webView.estimatedProgress)
@@ -60,12 +73,13 @@ class ViewController : UIViewController, WKNavigationDelegate {
             title: "Open page...",
             message: nil,
             preferredStyle: .actionSheet)
-        alertController.addAction(
-            UIAlertAction(title: "apple.com", style: .default, handler: openPage)
-        )
-        alertController.addAction(
-            UIAlertAction(title: "hackingwithswift.com", style: .default, handler: openPage)
-        )
+
+        for website in websites {
+            alertController.addAction(
+                UIAlertAction(title: website, style: .default, handler: openPage)
+            )
+        }
+
         alertController.addAction(
             UIAlertAction(title: "Cancel", style: .cancel)
         )
