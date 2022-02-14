@@ -1,7 +1,18 @@
 //: A UIKit based Playground for presenting user interface
-  
+
 import UIKit
+import WebKit
 import PlaygroundSupport
+
+struct Petition: Codable {
+    var title: String
+    var body: String
+    var signatureCount: Int
+}
+
+struct Petitions: Codable {
+    var results: [Petition]
+}
 
 class TableViewCell: UITableViewCell {
     var titleLabel: UILabel!
@@ -36,12 +47,29 @@ class TableViewCell: UITableViewCell {
 
 
 class TableViewController : UITableViewController {
-    var petitions: [String] = ["A", "B", "C"]
+    var petitions: [Petition] = []
 
     let myCustomCellId = "My Cell"
 
     override func viewDidLoad() {
+        super.viewDidLoad()
         tableView.register(TableViewCell.self, forCellReuseIdentifier: myCustomCellId)
+
+        let urlString: String
+
+        if navigationController?.tabBarItem.tag == 0 {
+            urlString = "https://www.hackingwithswift.com/samples/petitions-1.json"
+        } else {
+            urlString = "https://www.hackingwithswift.com/samples/petitions-2.json"
+        }
+
+        if let url = URL(string: urlString),
+           let data = try? Data(contentsOf: url) {
+            parse(json: data)
+            return
+        }
+
+        showError()
     }
 
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
@@ -51,12 +79,76 @@ class TableViewController : UITableViewController {
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: myCustomCellId, for: indexPath) as! TableViewCell
 
-        cell.titleLabel.text = "Title goes here"
-        cell.subtitleLabel.text = "Subtitle goes here"
+        cell.titleLabel.text = petitions[indexPath.row].title
+        cell.subtitleLabel.text = petitions[indexPath.row].body
         return cell
+    }
+
+    override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        let detailViewController = DetailViewController()
+        detailViewController.detailItem = petitions[indexPath.row]
+        navigationController?.pushViewController(detailViewController, animated: true)
+    }
+
+    private func parse(json: Data) {
+        let decoder = JSONDecoder()
+        if let jsonPetitions = try? decoder.decode(Petitions.self, from: json) {
+            petitions = jsonPetitions.results
+            tableView.reloadData()
+        }
+    }
+
+    func showError() {
+        let ac = UIAlertController(
+            title: "Loading error",
+            message: "There was a problem loading the feed; please check your connection and try again.",
+            preferredStyle: .alert
+        )
+        ac.addAction(UIAlertAction(title: "OK", style: .default))
+        present(ac, animated: true)
     }
 }
 
+class DetailViewController: UIViewController {
+    var webView: WKWebView!
+    var detailItem: Petition?
+
+    override func loadView() {
+        webView = WKWebView()
+        view = webView
+    }
+
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        guard let detailItem = detailItem else {
+            return
+        }
+
+        let html = """
+        <html>
+        <head>
+        <meta name="viewport" content="width=device-width, initial-
+        scale=1">
+        <style> body { font-size: 150%; } </style>
+        </head>
+        <body>
+        \(detailItem.body)
+        </body>
+        </html>
+        """
+
+        webView.loadHTMLString(html, baseURL: nil)
+    }
+
+}
+
 let tabBarController = UITabBarController()
-tabBarController.viewControllers = [TableViewController()]
+
+let content = UINavigationController(
+    rootViewController: TableViewController()
+)
+
+content.tabBarItem = UITabBarItem(tabBarSystemItem: .topRated, tag: 1)
+
+tabBarController.viewControllers = [ content ]
 PlaygroundPage.current.liveView = tabBarController
