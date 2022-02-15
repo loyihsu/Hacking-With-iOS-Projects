@@ -44,9 +44,11 @@ class TableViewCell: UITableViewCell {
             equalTo: contentView.safeAreaLayoutGuide.rightAnchor, constant: 20
         ).isActive = true
 
-
         subtitleLabel.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 0).isActive = true
         subtitleLabel.leftAnchor.constraint(equalTo: contentView.safeAreaLayoutGuide.leftAnchor, constant: 20).isActive = true
+
+        titleLabel.widthAnchor.constraint(equalTo: contentView.widthAnchor, constant: -20).isActive = true
+        subtitleLabel.widthAnchor.constraint(equalTo: contentView.widthAnchor, constant: -20).isActive = true
     }
 }
 
