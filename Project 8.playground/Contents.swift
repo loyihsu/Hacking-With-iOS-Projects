@@ -125,6 +125,9 @@ class ViewController: UIViewController {
         buttonsView.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(buttonsView)
 
+        buttonsView.layer.borderWidth = 1
+        buttonsView.layer.borderColor = UIColor.gray.cgColor
+
         NSLayoutConstraint.activate([
             buttonsView.widthAnchor.constraint(equalToConstant: 750),
             buttonsView.heightAnchor.constraint(equalToConstant: 320),
@@ -174,7 +177,7 @@ class ViewController: UIViewController {
 
             score += 1
 
-            if score % 7 == 0 {
+            if letterButtons.filter({ !$0.isHidden }).isEmpty {
                 let ac = UIAlertController(title: "Well done!",
                                            message: "Are you ready for the next level?",
                                            preferredStyle: .alert)
@@ -182,10 +185,20 @@ class ViewController: UIViewController {
                                            style: .default, handler: levelUp))
                 present(ac, animated: true)
             }
+        } else {
+            let ac = UIAlertController(title: "Wrong Answer",
+                                       message: "Try Again",
+                                       preferredStyle: .alert)
+            ac.addAction(UIAlertAction(title: "Done",
+                                       style: .default, handler: { _ in
+                self.clearTapped(self)
+            }))
+            score -= 1
+            present(ac, animated: true)
         }
     }
 
-    @objc func clearTapped(_ sender: UIButton) {
+    @objc func clearTapped(_ sender: Any) {
         currentAnswer.text = ""
         activatedButtons.forEach({ $0.isHidden = false })
         activatedButtons.removeAll()
