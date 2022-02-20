@@ -29,17 +29,23 @@ class TableViewController : UITableViewController {
         //    .map({ "\(path)/\($0)" })
 
         // Get the image files in the `Resource` folder in Swift Playground
-        let images = Bundle
-            .main
-            .paths(forResourcesOfType: "jpg", inDirectory: nil)
 
+        DispatchQueue.global(qos: .background).async {
+            let images = Bundle
+                .main
+                .paths(forResourcesOfType: "jpg", inDirectory: nil)
 
-        pictures = images
-            .sorted()
-            .enumerated()
-            .map({ (offset, path) -> ImageItem in
-                return ImageItem(name: "Picture \(offset + 1) of \(images.count)", path: path)
-            })
+            self.pictures = images
+                .sorted()
+                .enumerated()
+                .map({ (offset, path) -> ImageItem in
+                    return ImageItem(name: "Picture \(offset + 1) of \(images.count)", path: path)
+                })
+
+            DispatchQueue.main.async {
+                self.tableView.reloadData()
+            }
+        }
 
         // Register for reuse identifier for later use.
         tableView.register(UITableViewCell.self, forCellReuseIdentifier: myCustomCellId)
