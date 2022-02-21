@@ -14,10 +14,14 @@ class PersonCell: UICollectionViewCell {
     override init(frame: CGRect) {
         super.init(frame: frame)
 
+        backgroundColor = .white
+
+        layer.cornerRadius = 7
+
         nameLabel = UILabel()
         nameLabel.font = UIFont(name: "Marker Felt", size: 16)
         nameLabel.text = "Label"
-        nameLabel.textColor = .label
+        nameLabel.textColor = .black
         nameLabel.textAlignment = .center
 
         imageView = UIImageView()
