@@ -9,8 +9,18 @@ import SpriteKit
 import GameplayKit
 
 class GameScene: SKScene {
+    enum BallType: String, CaseIterable {
+        case ballBlue, ballCyan, ballGreen, ballGrey, ballPurple, ballRed, ballYellow
+    }
+
+    private func getRandomBall() -> String {
+        return BallType.allCases.randomElement()!.rawValue
+    }
+
     var scoreLabel: SKLabelNode!
     var editLabel: SKLabelNode!
+
+    var ballCount = 5
 
     var score = 0 {
         didSet {
@@ -77,6 +87,9 @@ class GameScene: SKScene {
                                                           blue: CGFloat.random(in: 0...1),
                                                           alpha: 1),
                                            size: size)
+
+                    box.name = "box"
+
                     box.zRotation = CGFloat.random(in: 0...3)
                     box.position = location
 
@@ -85,7 +98,14 @@ class GameScene: SKScene {
 
                     addChild(box)
                 } else {
-                    let ball = SKSpriteNode(imageNamed: "ballRed")
+                    guard location.y > size.height / 2 else {
+                        return
+                    }
+                    guard ballCount >= 0 else {
+                        return
+                    }
+
+                    let ball = SKSpriteNode(imageNamed: getRandomBall())
 
                     ball.name = "ball"
 
@@ -96,6 +116,8 @@ class GameScene: SKScene {
                     ball.physicsBody?.restitution = 0.4
                     ball.position = location
                     addChild(ball)
+
+                    ballCount -= 1
                 }
             }
         }
@@ -158,9 +180,12 @@ extension GameScene: SKPhysicsContactDelegate {
         if object.name == "good" {
             destroy(ball: ball)
             score += 1
+            ballCount += 1
         } else if object.name == "bad" {
             destroy(ball: ball)
             score -= 1
+        } else if object.name == "box" {
+            destroy(box: object)
         }
     }
 
@@ -171,5 +196,9 @@ extension GameScene: SKPhysicsContactDelegate {
         }
 
         ball.removeFromParent()
+    }
+
+    func destroy(box: SKNode) {
+        box.removeFromParent()
     }
 }
