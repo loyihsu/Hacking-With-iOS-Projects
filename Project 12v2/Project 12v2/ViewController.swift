@@ -1,6 +1,6 @@
 //
 //  ViewController.swift
-//  Project 12v1
+//  Project 12v2
 //
 //  Created by Yu-Sung Loyi Hsu on 2022/2/24.
 //
@@ -13,12 +13,12 @@ class ViewController: UIViewController, UINavigationControllerDelegate {
     
     let cellID = "PersonCell"
     let peopleArraySaveKey = "peopleArray"
-    
+
     override func viewDidLoad() {
         super.viewDidLoad()
-        
+
         people = load()
-        
+
         navigationItem.leftBarButtonItem = UIBarButtonItem(
             barButtonSystemItem: .add,
             target: self,
@@ -166,9 +166,9 @@ extension ViewController: UIImagePickerControllerDelegate {
         
         let person = Person(name: "Unknown", image: imageName)
         people.append(person)
-        
+
         save()
-        
+
         collectionView.reloadData()
         dismiss(animated: true)
     }
@@ -176,14 +176,15 @@ extension ViewController: UIImagePickerControllerDelegate {
 
 extension ViewController {
     func save() {
-        if let savedData = try? NSKeyedArchiver.archivedData(withRootObject: people,
-                                                             requiringSecureCoding: false) {
+        if let savedData = try? JSONEncoder().encode(people) {
             UserDefaults.standard.set(savedData, forKey: peopleArraySaveKey)
+        } else {
+            print("Failed to save people.")
         }
     }
     func load() -> [Person] {
         if let savedArray = UserDefaults.standard.object(forKey: peopleArraySaveKey) as? Data,
-           let decodedPeople = try? NSKeyedUnarchiver.unarchiveTopLevelObjectWithData(savedArray) as? [Person] {
+           let decodedPeople = try? JSONDecoder().decode([Person].self, from: savedArray) {
             return decodedPeople
         }
         return []
