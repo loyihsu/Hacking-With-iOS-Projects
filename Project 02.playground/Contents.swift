@@ -91,11 +91,16 @@ class GameViewController : UIViewController {
         questions.shuffle()
 
         guard let question = questions.popLast() else {
-            createAlert(title: "Your Final Score is \(yourScore)", message: "You've answered all the questions!") { alertController in
-                alertController.addAction(UIAlertAction(title: "Restart", style: .destructive) { [self] _ in
-                    reset()
-                    alertController.dismiss(animated: true, completion: nil)
-                })
+            let higher = "Your score is higher than the previous high (\(load()))!"
+            createAlert(title: "Your Final Score is \(yourScore)",
+                        message: "You've answered all the questions! \(yourScore > load() ? higher : "")"
+            ) { alertController in
+                alertController.addAction(
+                    UIAlertAction(title: "Restart", style: .destructive) { [self] _ in
+                        save()
+                        reset()
+                        alertController.dismiss(animated: true, completion: nil)
+                    })
             }
             return
         }
@@ -164,9 +169,21 @@ class GameViewController : UIViewController {
     }
 
     func reset() {
+        if yourScore > load() {
+            save()
+        }
         yourScore = 0
         questions = listOfCountries
         askQuestion()
+    }
+}
+
+extension GameViewController {
+    func load() -> Int {
+        return UserDefaults.standard.integer(forKey: "highestScore")
+    }
+    func save() {
+        UserDefaults.standard.set(yourScore, forKey: "highestScore")
     }
 }
 

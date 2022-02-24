@@ -18,6 +18,8 @@ class TableViewController : UITableViewController {
 
     let myCustomCellId = "myCustomCellId"
 
+    var counts = [Int]()
+
     override func viewDidLoad() {
         super.viewDidLoad()
 
@@ -29,8 +31,8 @@ class TableViewController : UITableViewController {
         //    .map({ "\(path)/\($0)" })
 
         // Get the image files in the `Resource` folder in Swift Playground
-
-        DispatchQueue.global(qos: .background).async {
+        
+        DispatchQueue.global(qos: .background).async { [self] in
             let images = Bundle
                 .main
                 .paths(forResourcesOfType: "jpg", inDirectory: nil)
@@ -41,6 +43,12 @@ class TableViewController : UITableViewController {
                 .map({ (offset, path) -> ImageItem in
                     return ImageItem(name: "Picture \(offset + 1) of \(images.count)", path: path)
                 })
+
+            if let saved = load() {
+                counts = saved
+            } else {
+                counts = [Int](repeating: 0, count: pictures.count)
+            }
 
             DispatchQueue.main.async {
                 self.tableView.reloadData()
@@ -78,6 +86,8 @@ class TableViewController : UITableViewController {
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         let detailViewController = DetailViewController()
         detailViewController.image = pictures[indexPath.row]
+        counts[indexPath.row] += 1
+        save()
         navigationController?.pushViewController(detailViewController, animated: true)
     }
 
@@ -93,6 +103,21 @@ class TableViewController : UITableViewController {
             print("Really?")
         }))
         present(ac, animated: true)
+    }
+}
+
+extension TableViewController {
+    func save() {
+        if let count = try? JSONEncoder().encode(counts) {
+            UserDefaults.standard.set(count, forKey: "counts")
+        }
+    }
+    func load() -> [Int]? {
+        if let data = UserDefaults.standard.data(forKey: "counts"),
+           let decodedArray = try? JSONDecoder().decode([Int].self, from: data) {
+            return decodedArray
+        }
+        return nil
     }
 }
 

@@ -10,6 +10,7 @@ class TableViewController : UITableViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
+
         navigationItem.rightBarButtonItem = UIBarButtonItem(barButtonSystemItem: .add,
                                                             target: self,
                                                             action: #selector(promptForAnswer))
@@ -31,6 +32,8 @@ class TableViewController : UITableViewController {
         tableView.register(UITableViewCell.self, forCellReuseIdentifier: cellIdentifier)
 
         startGame()
+
+        load()
     }
 
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
@@ -77,6 +80,7 @@ class TableViewController : UITableViewController {
             if isOriginal(word: lowerAnswer) {
                 if isReal(word: lowerAnswer) {
                     usedWords.insert(lowerAnswer, at: 0)
+                    save()
                     let indexPath = IndexPath(row: 0, section: 0)
                     tableView.insertRows(at: [indexPath], with: .automatic)
                 } else {
@@ -124,5 +128,26 @@ class TableViewController : UITableViewController {
         present(alertController, animated: true)
     }
 }
+
+extension TableViewController {
+    func load() {
+        title = UserDefaults.standard.string(forKey: "currentWord")
+        if let data = UserDefaults.standard.data(forKey: "usedWords"),
+           let decoded = try? JSONDecoder().decode([String].self, from: data) {
+            usedWords = decoded
+        }
+    }
+
+    func save() {
+        UserDefaults.standard.set(title!, forKey: "currentWord")
+        if let saved = try? JSONEncoder().encode(usedWords) {
+            UserDefaults.standard.set(saved, forKey: "usedWords")
+        }
+    }
+}
+
 // Present the view controller in the Live View window
-PlaygroundPage.current.liveView = UINavigationController(rootViewController: TableViewController())
+let viewController = UINavigationController(rootViewController: TableViewController())
+viewController.view.frame = CGRect(x: 0, y: 0, width: 320, height: 568)
+
+PlaygroundPage.current.liveView = viewController
