@@ -78,6 +78,7 @@ class ViewController: UIViewController, UINavigationControllerDelegate {
 
         context = CIContext()
         currentFilter = CIFilter(name: "CISepiaTone")
+        changeFilterButton.setTitle("CISepiaTone", for: .normal)
 
         changeFilterButton.addTarget(self, action: #selector(changeFilter), for: .touchDown)
         slider.addTarget(self, action: #selector(applyProcessing), for: .touchDragInside)
@@ -125,6 +126,7 @@ class ViewController: UIViewController, UINavigationControllerDelegate {
         guard let actionTitle = action.title else { return }
 
         currentFilter = CIFilter(name: actionTitle)
+        changeFilterButton.setTitle(actionTitle, for: .normal)
         
         let beginImage = CIImage(image: currentImage)
         currentFilter.setValue(beginImage, forKey: kCIInputImageKey)
@@ -133,7 +135,12 @@ class ViewController: UIViewController, UINavigationControllerDelegate {
     }
 
     @objc func save(_ sender: Any) {
-        guard let image = imageView.image else { return }
+        guard let image = imageView.image else {
+            let ac = UIAlertController(title: "No image imported!", message: nil, preferredStyle: .alert)
+            ac.addAction(UIAlertAction(title: "Close", style: .cancel))
+            present(ac, animated: true)
+            return
+        }
         UIImageWriteToSavedPhotosAlbum(image, self, #selector(image(_:didFinishSavingWithError:contextInfo:)), nil)
     }
 
